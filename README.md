@@ -8,6 +8,7 @@ Open Source Google Maps Timeline Viewer
 
 
 ## How to use:
+
 * Access the viewer at https://r-li.com/google-maps-timeline-viewer
 <br>or<br>
 Download ***index.html*** to use locally or customize it as needed.
@@ -16,7 +17,7 @@ Download ***index.html*** to use locally or customize it as needed.
 
 ## About Google Maps Timeline and how to export the data:
 
-**Official Instructions:** https://support.google.com/maps/answer/6258979
+**Official Doc:** https://support.google.com/maps/answer/6258979
 
 **Note:** Timeline is no longer available on computers
 
@@ -32,10 +33,13 @@ Download ***index.html*** to use locally or customize it as needed.
 
 
 ## Preview:
+
 Click ***lines*** or ***points*** to view details:
+
 ![Preview-1](pics/pic-1.png "Preview-1")
 
 Filter data by ***date***, ***categories***, and ***detailed types*** & change the ***basemap***:
+
 ![Preview-2](pics/pic-2.png "Preview-2")
 
 
@@ -47,5 +51,12 @@ Filter data by ***date***, ***categories***, and ***detailed types*** & change t
 | ***activity*** | start point + end point | activities from one point to another | *walking*, *cycling*, *flying*, *in subway*, etc. |
 | ***timelinePath*** | path - collection of all recorded points along the path | movements paths | n/a |
 
+
+## Time zone:
+
+All timestamps will be converted to Coordinated Universal Time (UTC)
+
+
 ## Acknowledgement:
+
 Coded with assistance from *Google Gemini 3 Pro*
