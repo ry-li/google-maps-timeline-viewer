@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location History Visualizer v17</title>
+    <title>Location History Visualizer v19</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -116,7 +116,7 @@
             border: 1px solid #ccc;
             pointer-events: none;
         }
-        #error-msg { color: #dc2626; font-weight: bold; display: none; }
+        #error-msg { color: #dc2626; font-weight: bold; display: none; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -180,7 +180,8 @@
     <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
     <script>
-        // Fix: Restrict panning to world bounds
+        // Initialize Map with MinZoom constraint to prevent excessive zoom-out
+        // and MaxBounds to prevent panning off the world
         const map = L.map('map', {
             center: [39.8, -98.5],
             zoom: 4,
@@ -318,10 +319,24 @@
                     line.bindPopup(`<b>Timeline Path</b><br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}<br>Points: ${item.points.length}`);
                     dataLayers.addLayer(line);
                     
-                    item.points.forEach(pt => {
+                    // Render Points
+                    item.points.forEach((pt, index) => {
                         const c = L.circleMarker([pt.lat, pt.lng], { radius: 3, fillColor: '#16a34a', color: '#fff', weight: 1, fillOpacity: 1 });
-                        const txt = pt.offset ? `+ ${pt.offset} min` : "Start";
-                        c.bindPopup(`<b>Timeline Point</b><br>${txt}`);
+                        
+                        const offsetText = pt.offset ? `+ ${pt.offset} min` : "Start (+ 0 min)";
+                        const seqText = `Point ${index + 1}/${item.points.length}`;
+                        
+                        // Extended Popup Content
+                        const popupContent = `
+                            <b>Timeline Point</b><br>
+                            ${seqText}<br>
+                            Offset From Start Time: ${offsetText}<br>
+                            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ccc;">
+                            Path Start: ${formatUTC(item.startTime)}<br>
+                            Path End: ${formatUTC(item.endTime)}
+                        `;
+                        
+                        c.bindPopup(popupContent);
                         dataLayers.addLayer(c);
                         bounds.extend([pt.lat, pt.lng]);
                     });
@@ -408,6 +423,14 @@
             const endStr = document.getElementById('endDate').value;
             const cat = document.getElementById('catFilter').value;
             const type = document.getElementById('typeFilter').value;
+            
+            // Get Status/Error Elements
+            const errorBox = document.getElementById('error-msg');
+            const statusBox = document.getElementById('status');
+
+            // Reset Error
+            errorBox.style.display = 'none';
+            statusBox.style.display = 'inline';
 
             const sDate = startStr ? new Date(startStr + "T00:00:00Z") : new Date(0);
             let eDate;
@@ -415,6 +438,13 @@
                 eDate = new Date(endStr + "T23:59:59Z");
             } else {
                 eDate = new Date(8640000000000000);
+            }
+
+            // --- DATE VALIDATION CHECK ---
+            if (sDate > eDate) {
+                errorBox.innerText = "Error: End Date cannot be earlier than Start Date.";
+                errorBox.style.display = 'inline';
+                return; // Stop execution
             }
 
             const filtered = allMapItems.filter(item => {
