@@ -770,7 +770,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    loadMapData(data, "Sample Data<br><br>Refresh the page to load your own data");
+                    loadMapData(data, "Sample Data<br><br>Reload the page to upload your own data");
                 })
                 .catch(err => {
                     console.error("Fetch error:", err);
