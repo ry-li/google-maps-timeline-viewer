@@ -3,58 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location History Visualizer v19</title>
+    <title>Timeline Viewer</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
      
     <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
     <style>
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; display: flex; flex-direction: column; height: 100vh; }
         
-        /* Control Bar */
+        /* Control Bar Container */
         #controls {
             background: #ffffff;
-            padding: 12px 20px;
+            padding: 12px;
             border-bottom: 1px solid #e0e0e0;
             display: flex;
-            gap: 20px;
-            align-items: flex-end; 
             justify-content: center;
-            flex-wrap: wrap;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             z-index: 1000;
             position: relative;
         }
 
-        .control-group { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+        /* Initial Upload State */
+        #upload-container {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        /* Filter State (Hidden initially) */
+        #filter-container {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Rows for layout */
+        .control-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 6px; align-items: center; }
         
         /* Standard Labels */
-        .control-group > label:not(.custom-file-upload) { 
+        .control-group > label:not(.custom-file-upload):not(.toggle-label) { 
             font-size: 11px; 
             font-weight: 700; 
             color: #555; 
             text-transform: uppercase; 
             letter-spacing: 0.5px; 
+            align-self: flex-start;
         }
         
-        select, input[type="date"] {
-            padding: 8px 12px;
+        select, input[type="text"], input[type="date"] {
+            padding: 4px 6px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             background: #fff;
             color: #333;
-            min-width: 120px;
+            min-width: 60px;
+            max-width: 120px;
         }
 
-        /* Specific width for Type Filter */
-        #typeFilter {
-            min-width: 180px;
-            max-width: 250px;
-            text-overflow: ellipsis;
+        /* Specific inputs */
+        #typeFilter { min-width: 160px; max-width: 200px; text-overflow: ellipsis; }
+        .date-input { 
+            width: 77px; 
+            background-color: #fff !important; 
+            text-align: center; 
         }
 
         /* Custom File Input Styling */
@@ -62,7 +90,7 @@
         
         .custom-file-upload {
             display: inline-block;
-            padding: 8px 24px;
+            padding: 8px 20px; /* Larger for initial view */
             cursor: pointer;
             background-color: #2563eb;
             color: #ffffff !important;
@@ -72,49 +100,88 @@
             transition: background 0.2s;
             text-align: center;
             border: 1px solid #2563eb;
-            text-transform: none; 
-            letter-spacing: normal;
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
         }
         
         .custom-file-upload:hover { background-color: #1d4ed8; border-color: #1d4ed8; }
         
-        /* Action Button */
-        #applyBtn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            background-color: #16a34a;
-            color: white;
-            font-weight: 600;
+        /* Sample Data Button */
+        .sample-btn {
+            margin-top: 4px;
+            background-color: #78a3f9;
+            color: #ffffff !important;
+            border: 1px solid #d1d5db;
+            font-size: 13px;
+            padding: 6px 15px;
+            border-radius: 4px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+            transition: all 0.2s;
         }
-        #applyBtn:hover { background-color: #15803d; }
+
+        .sample-btn:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Mode Switcher */
+        .mode-switcher {
+            display: flex;
+            background: #f3f4f6;
+            padding: 1px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .mode-switcher label {
+            padding: 2px 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #6b7280;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .mode-switcher input[type="radio"] { display: none; }
+        .mode-switcher input[type="radio"]:checked + span {
+            background: #fff;
+            color: #2563eb;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .mode-switcher span { padding: 2px 4px; border-radius: 4px; display: block; }
+        /* Navigation Buttons */
+        .nav-btn {
+            padding: 2px 4px;
+            background: #f3f4f6;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+        }
+        .nav-btn:hover { background: #e5e7eb; }
+        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Legend */
         .legend-bar { background:#f9fafb; padding:8px 20px; display:flex; border-bottom:1px solid #ccc; gap: 20px; flex-wrap: wrap; font-size: 13px; justify-content: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; color: #374151; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .line { width: 24px; height: 3px; display: inline-block; }
+        .activity-icon { display: flex; align-items: center; gap: 2px; }
+        .act-start { width: 8px; height: 8px; background: #fff; border: 2px solid #f97316; border-radius: 50%; display: inline-block; }
+        .act-line { width: 20px; height: 0; border-top: 3px dashed #f97316; display: inline-block; opacity: 0.8; }
+        .act-end { width: 10px; height: 10px; background: #f97316; border: 1px solid #fff; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1px #f97316; }
         
         /* Map Area */
         #map { flex-grow: 1; width: 100%; background: #e5e5e5; z-index: 1; }
         
-        /* Status Bar Overlay */
+        /* Status Bar (Layout Block) */
         #status-bar {
-            position: absolute;
-            top: 80px;
-            right: 10px;
-            z-index: 1001;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #444;
-            border: 1px solid #ccc;
-            pointer-events: none;
+            background: #fcfcfc;
+            padding: 8px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 13px;
+            color: #4b5563;
         }
         #error-msg { color: #dc2626; font-weight: bold; display: none; margin-left: 10px; }
     </style>
@@ -122,53 +189,86 @@
 <body>
 
     <div id="controls">
-        <div class="control-group">
-            <label for="fileInput" class="custom-file-upload">
-                Upload Data
-            </label>
-            <input type="file" id="fileInput" accept=".json,.txt">
-        </div>
-
-        <div class="control-group">
-            <label>Date Range (UTC)</label>
-            <div style="display:flex; gap:5px;">
-                <input type="date" id="startDate">
-                <input type="date" id="endDate">
+        <div id="upload-container">
+            <div class="control-group">
+                <label for="fileInput" class="custom-file-upload">
+                    Upload Google Maps Timeline JSON
+                </label>
+                <input type="file" id="fileInput" accept=".json,.txt">
+                
+                <button id="loadSampleBtn" class="sample-btn">Load Sample Data</button>
             </div>
         </div>
 
-        <div class="control-group">
-            <label>Data Category</label>
-            <select id="catFilter">
-                <option value="all">Show All Data</option>
-                <option value="visit">Visits</option>
-                <option value="timelinePath">Timeline Paths</option>
-                <option value="activity">Activities</option>
-            </select>
-        </div>
+        <div id="filter-container">
+            
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Date Filter (UTC)</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <div class="mode-switcher">
+                            <label>
+                                <input type="radio" name="dateMode" value="range" checked onchange="toggleDateMode()">
+                                <span>Range</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="dateMode" value="single" onchange="toggleDateMode()">
+                                <span>Date</span>
+                            </label>
+                        </div>
+                        
+                        <div id="rangeControls" style="display:flex; gap:5px;">
+                            <input type="text" id="startDate" class="date-input" placeholder="Start Date">
+                            <input type="text" id="endDate" class="date-input" placeholder="End Date">
+                        </div>
 
-        <div class="control-group">
-            <label>Detailed Types</label>
-            <select id="typeFilter">
-                <option value="all">Select a Category</option>
-            </select>
-        </div>
+                        <div id="singleControls" style="display:none; gap:5px; align-items:center;">
+                            <button class="nav-btn" id="prevDayBtn" title="Previous Available Day">&lt;</button>
+                            <input type="text" id="singleDate" class="date-input" placeholder="Select Date" style="text-align:center;">
+                            <button class="nav-btn" id="nextDayBtn" title="Next Available Day">&gt;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <div class="control-group">
-            <label>&nbsp;</label>
-            <button id="applyBtn">Apply Filters</button>
-        </div>
-    </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>Data Category</label>
+                    <select id="catFilter">
+                        <option value="all">Show All</option>
+                        <option value="visit">Visit</option>
+                        <option value="timelinePath">Timeline Path</option>
+                        <option value="activity">Activity</option>
+                    </select>
+                </div>
 
-    <div class="legend-bar">
-        <div class="legend-item"><span class="dot" style="background:#2563eb;"></span> Visit</div>
-        <div class="legend-item"><span class="line" style="background:#16a34a;"></span> Timeline Path</div>
-        <div class="legend-item"><span class="line" style="background:#f97316; border-bottom: 2px dashed #f97316; height:0;"></span> Activity (A to B)</div>
+                <div class="control-group">
+                    <label>Detailed Types</label>
+                    <select id="typeFilter">
+                        <option value="all">Select a Category</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <div id="status-bar">
         <span id="status">Ready to load file.</span>
         <span id="error-msg"></span>
+    </div>
+
+    <div class="legend-bar">
+        <div class="legend-item"><span class="dot" style="background:#2563eb;"></span> Visit</div>
+        <div class="legend-item"><span class="line" style="background:#16a34a;"></span> Timeline Path</div>
+        <div class="legend-item">
+            <div class="activity-icon">
+                <span class="act-start" title="Start Point"></span>
+                <span class="act-line"></span>
+                <span class="act-end" title="End Point"></span>
+            </div> 
+            Activity
+        </div>
     </div>
 
     <div id="map"></div>
@@ -178,39 +278,45 @@
      crossorigin=""></script>
      
     <script src="https://unpkg.com/leaflet-polyline-decorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>
-        // Initialize Map with MinZoom constraint to prevent excessive zoom-out
-        // and MaxBounds to prevent panning off the world
+        // --- Map Initialization ---
         const map = L.map('map', {
             center: [39.8, -98.5],
             zoom: 4,
             minZoom: 2,
-            maxBounds: [[-90, -180], [90, 180]], // Prevent panning past edges
-            maxBoundsViscosity: 1.0 // Solid bounce back
+            maxBounds: [[-90, -180], [90, 180]],
+            maxBoundsViscosity: 1.0
         });
         
-        let currentFileName = "";
-        
         const basemaps = {
-            "Carto Voyager": L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
-            "Carto Voyager (No Labels)": L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
-            "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }),
-            "Satellite Streets": L.layerGroup([
+            "Voyager": L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
+            "Voyager (No Labels)": L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
+            "Satellite": L.layerGroup([
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'),
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}')
             ]),
-            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }),
-            "Carto Positron": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
-            "Carto Dark Matter": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 })
+            "Satellite (No Labels)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri' }),
+            "Positron": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
+            "Dark Matter": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20 }),
+            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' })
         };
 
-        let currentLayer = basemaps["Carto Voyager"];
+        let currentLayer = basemaps["Voyager"];
         currentLayer.addTo(map);
         L.control.layers(basemaps).addTo(map);
 
-        let allMapItems = [];
         const dataLayers = L.layerGroup().addTo(map);
+
+        // --- State Variables ---
+        let allMapItems = [];
+        let currentFileName = "";
+        let validDateStrings = []; // Array of 'YYYY-MM-DD' strings present in data
+        
+        // Flatpickr instances
+        let fpStart, fpEnd, fpSingle;
 
         // --- Helper Functions ---
         function parseGeo(geoStr) {
@@ -225,15 +331,28 @@
             return dateObj.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
         }
 
+        function toISODate(dateObj) {
+            return dateObj.toISOString().split('T')[0];
+        }
+
         // --- Data Processor ---
         function processData(rawData) {
             const items = [];
-            if (!Array.isArray(rawData)) return items;
+            const dateSet = new Set();
+
+            if (!Array.isArray(rawData)) return { items, dates: [] };
 
             rawData.forEach(entry => {
                 const start = entry.startTime ? new Date(entry.startTime) : null;
-                const end = entry.endTime ? new Date(entry.endTime) : null;
+                // Ensure end exists, default to start if null
+                const end = entry.endTime ? new Date(entry.endTime) : (start ? new Date(start) : null);
+
                 if (!start) return;
+
+                // Capture date for picker (All days involved in the span)
+                // We add the start date and end date to the allowed list
+                dateSet.add(toISODate(start));
+                if (end) dateSet.add(toISODate(end));
 
                 // 1. Visit
                 if (entry.visit) {
@@ -257,7 +376,7 @@
                         return c ? { lat: c[0], lng: c[1], offset: p.durationMinutesOffsetFromStartTime } : null;
                     }).filter(p => p !== null);
 
-                    if (points.length > 1) {
+                    if (points.length > 0) {
                         items.push({
                             category: 'timelinePath',
                             subType: 'GPS Trace',
@@ -290,8 +409,103 @@
                     }
                 }
             });
-            return items;
+            
+            return { items, dates: Array.from(dateSet).sort() };
         }
+
+        // --- UI Logic: Date Pickers ---
+        function initDatePickers(dates) {
+            validDateStrings = dates;
+
+            const config = {
+                enable: validDateStrings, // This disables all dates NOT in the list
+                dateFormat: "Y-m-d",
+                locale: {
+                    firstDayOfWeek: 1
+                },
+                // Add auto-apply on change
+                onChange: function(selectedDates, dateStr, instance) {
+                    applyFilters();
+                }
+            };
+
+            // Destroy old instances if exist
+            if (fpStart) fpStart.destroy();
+            if (fpEnd) fpEnd.destroy();
+            if (fpSingle) fpSingle.destroy();
+
+            // Init Range Pickers
+            fpStart = flatpickr("#startDate", { ...config, defaultDate: dates[0] });
+            fpEnd = flatpickr("#endDate", { ...config, defaultDate: dates[dates.length - 1] });
+            
+            // Init Single Picker
+            fpSingle = flatpickr("#singleDate", { 
+                ...config, 
+                defaultDate: dates[dates.length - 1],
+                onChange: function(selectedDates, dateStr) {
+                   updateNavButtons(dateStr);
+                   applyFilters(); // Auto-apply on single date pick
+                }
+            });
+
+            // Set initial state for nav buttons
+            if (dates.length > 0) {
+                updateNavButtons(dates[dates.length - 1]);
+            }
+        }
+
+        function toggleDateMode() {
+            const mode = document.querySelector('input[name="dateMode"]:checked').value;
+            const rangeControls = document.getElementById('rangeControls');
+            const singleControls = document.getElementById('singleControls');
+            
+            if (mode === 'range') {
+                rangeControls.style.display = 'flex';
+                singleControls.style.display = 'none';
+            } else {
+                rangeControls.style.display = 'none';
+                singleControls.style.display = 'flex';
+            }
+            
+            // Apply filters immediately when switching modes to update view to current inputs
+            applyFilters();
+        }
+
+        // --- Navigation Logic for Single Mode ---
+        function updateNavButtons(currentDateStr) {
+            const idx = validDateStrings.indexOf(currentDateStr);
+            const prevBtn = document.getElementById('prevDayBtn');
+            const nextBtn = document.getElementById('nextDayBtn');
+            
+            if (idx <= 0) prevBtn.disabled = true;
+            else prevBtn.disabled = false;
+
+            if (idx >= validDateStrings.length - 1 || idx === -1) nextBtn.disabled = true;
+            else nextBtn.disabled = false;
+        }
+
+        function shiftDate(direction) {
+            if (!fpSingle || validDateStrings.length === 0) return;
+            
+            const currentStr = fpSingle.input.value;
+            let idx = validDateStrings.indexOf(currentStr);
+            
+            if (idx === -1) {
+                // If current date isn't valid (shouldn't happen), jump to start or end
+                idx = direction > 0 ? -1 : validDateStrings.length;
+            }
+
+            const newIdx = idx + direction;
+            if (newIdx >= 0 && newIdx < validDateStrings.length) {
+                const newDate = validDateStrings[newIdx];
+                fpSingle.setDate(newDate);
+                updateNavButtons(newDate);
+                applyFilters();
+            }
+        }
+
+        document.getElementById('prevDayBtn').addEventListener('click', () => shiftDate(-1));
+        document.getElementById('nextDayBtn').addEventListener('click', () => shiftDate(1));
 
         // --- Render Logic ---
         function render(items) {
@@ -314,19 +528,16 @@
                 // --- B. TIMELINE PATH ---
                 else if (item.category === 'timelinePath') {
                     const latlngs = item.points.map(p => [p.lat, p.lng]);
-                    
                     const line = L.polyline(latlngs, { color: '#16a34a', weight: 4, opacity: 0.7 });
-                    line.bindPopup(`<b>Timeline Path</b><br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}<br>Points: ${item.points.length}`);
+                    line.bindPopup(`<b>Timeline Path</b><br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}<br>Total Points: ${item.points.length}`);
                     dataLayers.addLayer(line);
                     
-                    // Render Points
                     item.points.forEach((pt, index) => {
                         const c = L.circleMarker([pt.lat, pt.lng], { radius: 3, fillColor: '#16a34a', color: '#fff', weight: 1, fillOpacity: 1 });
                         
                         const offsetText = pt.offset ? `+ ${pt.offset} min` : "Start (+ 0 min)";
-                        const seqText = `Point ${index + 1}/${item.points.length}`;
+                        const seqText = `Point Sequence: ${index + 1}/${item.points.length}`;
                         
-                        // Extended Popup Content
                         const popupContent = `
                             <b>Timeline Point</b><br>
                             ${seqText}<br>
@@ -335,7 +546,7 @@
                             Path Start: ${formatUTC(item.startTime)}<br>
                             Path End: ${formatUTC(item.endTime)}
                         `;
-                        
+
                         c.bindPopup(popupContent);
                         dataLayers.addLayer(c);
                         bounds.extend([pt.lat, pt.lng]);
@@ -357,12 +568,13 @@
                         dataLayers.addLayer(decorator);
                     } catch(e) {}
 
+                    // Start/End dots
                     const sM = L.circleMarker(item.startPoint, { radius: 4, fillColor: '#fff', color: '#f97316', weight: 2, fillOpacity: 1 });
-                    sM.bindPopup(`<b>${item.subType}</b><br>Start Point<br>${formatUTC(item.startTime)}`);
+                    sM.bindPopup(`<b>Activity: ${item.subType}</b><br>Start Point<br>${formatUTC(item.startTime)}`);
                     dataLayers.addLayer(sM);
 
                     const eM = L.circleMarker(item.endPoint, { radius: 4, fillColor: '#f97316', color: '#fff', weight: 1, fillOpacity: 1 });
-                    eM.bindPopup(`<b>${item.subType}</b><br>End Point`);
+                    eM.bindPopup(`<b>Activity: ${item.subType}</b><br>End Point<br>${formatUTC(item.endTime)}`);
                     dataLayers.addLayer(eM);
 
                     item.coords.forEach(pt => bounds.extend(pt));
@@ -376,7 +588,7 @@
             
             let statusText = `Displayed ${count} items`;
             if (currentFileName) {
-                statusText += ` from <b>${currentFileName}</b>`;
+                statusText += ` from <i><b>${currentFileName}</b></i>`;
             }
             document.getElementById('status').innerHTML = statusText;
         }
@@ -388,8 +600,7 @@
             const types = new Set();
 
             sel.innerHTML = '';
-
-            // CASE 1: Show All Data -> "Select a Category"
+            
             if (cat === 'all') {
                 const opt = document.createElement('option');
                 opt.value = 'all';
@@ -398,7 +609,6 @@
                 return;
             }
 
-            // CASE 2: Specific Category -> "All Types" + Specific Options
             const allOpt = document.createElement('option');
             allOpt.value = 'all';
             allOpt.innerText = 'All Types';
@@ -419,36 +629,48 @@
         }
 
         function applyFilters() {
-            const startStr = document.getElementById('startDate').value;
-            const endStr = document.getElementById('endDate').value;
+            if (allMapItems.length === 0) return;
+
+            const mode = document.querySelector('input[name="dateMode"]:checked').value;
             const cat = document.getElementById('catFilter').value;
             const type = document.getElementById('typeFilter').value;
             
-            // Get Status/Error Elements
             const errorBox = document.getElementById('error-msg');
             const statusBox = document.getElementById('status');
 
-            // Reset Error
             errorBox.style.display = 'none';
             statusBox.style.display = 'inline';
 
-            const sDate = startStr ? new Date(startStr + "T00:00:00Z") : new Date(0);
-            let eDate;
-            if (endStr) {
-                eDate = new Date(endStr + "T23:59:59Z");
+            // Determine Date Range based on Mode
+            let sDate, eDate;
+
+            if (mode === 'range') {
+                const startStr = document.getElementById('startDate').value;
+                const endStr = document.getElementById('endDate').value;
+                // Append 'T00...Z' to force Date constructor to read as UTC
+                sDate = startStr ? new Date(startStr + "T00:00:00Z") : new Date(0);
+                eDate = endStr ? new Date(endStr + "T23:59:59.999Z") : new Date(8640000000000000);
             } else {
-                eDate = new Date(8640000000000000);
+                const singleStr = document.getElementById('singleDate').value;
+                if (!singleStr) {
+                    render([]); 
+                    return;
+                }
+                // Single day covers 00:00:00 to 23:59:59
+                sDate = new Date(singleStr + "T00:00:00Z");
+                eDate = new Date(singleStr + "T23:59:59.999Z");
             }
 
             // --- DATE VALIDATION CHECK ---
             if (sDate > eDate) {
                 errorBox.innerText = "Error: End Date cannot be earlier than Start Date.";
                 errorBox.style.display = 'inline';
-                return; // Stop execution
+                return;
             }
 
             const filtered = allMapItems.filter(item => {
-                if (item.startTime < sDate || item.startTime > eDate) return false;
+                // Show item if it ends AFTER window start AND starts BEFORE window end
+                if (item.endTime < sDate || item.startTime > eDate) return false;
                 if (cat !== 'all' && item.category !== cat) return false;
                 if (type !== 'all' && item.subType !== type) return false;
                 return true;
@@ -456,20 +678,54 @@
             render(filtered);
         }
 
+        // --- Shared Data Loader ---
+        function loadMapData(json, filename) {
+            try {
+                let dataArray = [];
+                if (Array.isArray(json)) dataArray = json;
+                else if (json.fullContent) dataArray = json.fullContent;
+                else if (json.timelineObjects) dataArray = json.timelineObjects; 
+                else if (json.locations) dataArray = json.locations;
+
+                const result = processData(dataArray);
+                allMapItems = result.items;
+                currentFileName = filename;
+                
+                if (allMapItems.length === 0) {
+                    document.getElementById('error-msg').innerText = "No valid data found in " + filename;
+                    document.getElementById('error-msg').style.display = 'inline';
+                } else {
+                    // Switch UI View
+                    document.getElementById('upload-container').style.display = 'none';
+                    document.getElementById('filter-container').style.display = 'flex';
+
+                    // Initialize Pickers with valid dates
+                    initDatePickers(result.dates);
+                    updateTypeDropdown();
+                    applyFilters();
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-msg').innerText = "Error parsing data.";
+                document.getElementById('error-msg').style.display = 'inline';
+            }
+        }
+
         // --- Listeners ---
-        // Only update dropdown options on category change, do NOT render map
+        // Changed to update AND apply on change
         document.getElementById('catFilter').addEventListener('change', () => {
             updateTypeDropdown();
+            applyFilters();
         });
 
-        document.getElementById('applyBtn').addEventListener('click', applyFilters);
+        // Add direct listener for type filter
+        document.getElementById('typeFilter').addEventListener('change', applyFilters);
 
+        // 1. File Upload Listener
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            currentFileName = file.name;
-            
             document.getElementById('status').innerText = "Processing...";
             document.getElementById('error-msg').style.display = 'none';
 
@@ -477,6 +733,7 @@
             reader.onload = (evt) => {
                 let text = evt.target.result;
                 
+                // Cleanup Google Takeout wrapper if present
                 if (text.includes("type: uploaded file")) {
                     const firstBracket = text.indexOf('[');
                     if (firstBracket > -1) {
@@ -489,25 +746,7 @@
 
                 try {
                     const json = JSON.parse(text);
-                    let dataArray = [];
-                    if (Array.isArray(json)) dataArray = json;
-                    else if (json.fullContent) dataArray = json.fullContent;
-                    else if (json.timelineObjects) dataArray = json.timelineObjects; 
-                    else if (json.locations) dataArray = json.locations;
-
-                    allMapItems = processData(dataArray);
-
-                    if (allMapItems.length === 0) {
-                        document.getElementById('error-msg').innerText = "No valid data found.";
-                        document.getElementById('error-msg').style.display = 'inline';
-                    } else {
-                        const sorted = [...allMapItems].sort((a,b) => a.startTime - b.startTime);
-                        document.getElementById('startDate').value = sorted[0].startTime.toISOString().split('T')[0];
-                        document.getElementById('endDate').value = sorted[sorted.length-1].startTime.toISOString().split('T')[0];
-                        
-                        updateTypeDropdown();
-                        applyFilters();
-                    }
+                    loadMapData(json, file.name);
                 } catch (err) {
                     console.error(err);
                     document.getElementById('error-msg').innerText = "Error: Invalid JSON.";
@@ -517,6 +756,32 @@
             };
             reader.readAsText(file);
         });
+
+        // 2. Sample Data Listener
+        document.getElementById('loadSampleBtn').addEventListener('click', () => {
+            document.getElementById('status').innerText = "Fetching sample data...";
+            document.getElementById('error-msg').style.display = 'none';
+            
+            const sampleUrl = "https://raw.githubusercontent.com/ry-li/google-maps-timeline-viewer/7384627e89e74637017bbbb615a7b4d5a449374e/location-history.json";
+
+            fetch(sampleUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    return response.json();
+                })
+                .then(data => {
+                    loadMapData(data, "Sample Data<br><br>Refresh the page to load your own data");
+                })
+                .catch(err => {
+                    console.error("Fetch error:", err);
+                    document.getElementById('status').innerText = "Failed.";
+                    document.getElementById('error-msg').innerText = "Error loading sample data. Check console.";
+                    document.getElementById('error-msg').style.display = 'inline';
+                });
+        });
+        
+        // Initial setup
+        toggleDateMode();
     </script>
 </body>
 </html>
