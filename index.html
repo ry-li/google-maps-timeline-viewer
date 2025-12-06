@@ -58,7 +58,7 @@
         
         /* Standard Labels */
         .control-group > label:not(.custom-file-upload):not(.toggle-label) { 
-            font-size: 11px; 
+            font-size: 13px; 
             font-weight: 700; 
             color: #555; 
             text-transform: uppercase; 
@@ -70,7 +70,7 @@
             padding: 4px 6px;
             border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 14px;
             background: #fff;
             color: #333;
             min-width: 60px;
@@ -80,7 +80,7 @@
         /* Specific inputs */
         #typeFilter { min-width: 160px; max-width: 200px; text-overflow: ellipsis; }
         .date-input { 
-            width: 77px; 
+            width: 80px; 
             background-color: #fff !important; 
             text-align: center; 
         }
@@ -134,7 +134,7 @@
         }
         .mode-switcher label {
             padding: 2px 4px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
             border-radius: 4px;
             color: #6b7280;
@@ -162,7 +162,7 @@
         .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Legend */
-        .legend-bar { background:#f9fafb; padding:8px 20px; display:flex; border-bottom:1px solid #ccc; gap: 20px; flex-wrap: wrap; font-size: 13px; justify-content: center; }
+        .legend-bar { background:#f9fafb; padding:8px 20px; display:flex; border-bottom:1px solid #ccc; gap: 20px; flex-wrap: wrap; font-size: 14px; justify-content: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; color: #374151; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .line { width: 24px; height: 3px; display: inline-block; }
@@ -180,10 +180,42 @@
             padding: 8px 20px;
             border-bottom: 1px solid #e5e7eb;
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
             color: #4b5563;
         }
         #error-msg { color: #dc2626; font-weight: bold; display: none; margin-left: 10px; }
+
+        /* Flatpickr Overrides - Smaller Size */
+        .flatpickr-calendar {
+            width: 280px !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        }
+        .flatpickr-days {
+            width: 280px !important;
+        }
+        .flatpickr-day {
+            max-width: 40px !important;
+            height: 28px !important;
+            line-height: 28px !important;
+            font-size: 12px !important;
+        }
+        .flatpickr-month {
+            font-size: 13px !important;
+            padding: 6px 0 !important;
+        }
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            height: 24px !important;
+            width: 24px !important;
+            padding: 2px !important;
+        }
+        .flatpickr-weekdays {
+            padding: 4px 0 !important;
+        }
+        .flatpickr-weekday {
+            font-size: 11px !important;
+            height: 20px !important;
+        }
     </style>
 </head>
 <body>
