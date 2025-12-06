@@ -80,7 +80,7 @@
         /* Specific inputs */
         #typeFilter { min-width: 160px; max-width: 200px; text-overflow: ellipsis; }
         .date-input { 
-            width: 80px; 
+            width: 77px;
             background-color: #fff !important; 
             text-align: center; 
         }
@@ -185,36 +185,86 @@
         }
         #error-msg { color: #dc2626; font-weight: bold; display: none; margin-left: 10px; }
 
-        /* Flatpickr Overrides - Smaller Size */
+        /* Flatpickr Overrides - Smaller Size & Prevent Zoom/Move on Mobile */
         .flatpickr-calendar {
-            width: 280px !important;
+            width: 240px !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+            position: fixed !important;
+            z-index: 99999 !important;
         }
         .flatpickr-days {
-            width: 280px !important;
+            width: 240px !important;
         }
         .flatpickr-day {
-            max-width: 40px !important;
-            height: 28px !important;
-            line-height: 28px !important;
-            font-size: 12px !important;
+            max-width: 32px !important;
+            height: 24px !important;
+            line-height: 24px !important;
+            font-size: 11px !important;
         }
         .flatpickr-month {
-            font-size: 13px !important;
-            padding: 6px 0 !important;
+            font-size: 14px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+            height: 22px !important;
         }
         .flatpickr-prev-month,
         .flatpickr-next-month {
-            height: 24px !important;
-            width: 24px !important;
-            padding: 2px !important;
+            height: 20px !important;
+            width: 20px !important;
+            min-width: 20px !important;
+            padding: 1px 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            line-height: 20px !important;
+        }
+        .flatpickr-monthDropdown-months {
+            flex: 1 !important;
+            text-align: center !important;
+            padding: 0 8px !important;
+            line-height: 22px !important;
+            font-size: 14px !important;
+        }
+        .flatpickr-current-month {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 1 !important;
+            height: 22px !important;
+            font-size: 14px !important;
+            padding-top: 0 !important;
         }
         .flatpickr-weekdays {
-            padding: 4px 0 !important;
+            padding: 3px 0 !important;
         }
         .flatpickr-weekday {
-            font-size: 11px !important;
-            height: 20px !important;
+            font-size: 10px !important;
+            height: 18px !important;
+        }
+        /* Prevent input focus zoom on mobile */
+        .date-input {
+            cursor: pointer !important;
+            touch-action: manipulation !important;
+        }
+        .flatpickr-day {
+            touch-action: manipulation !important;
+            cursor: pointer !important;
+        }
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            touch-action: manipulation !important;
+            cursor: pointer !important;
+        }
+        @media (max-width: 768px) {
+            .flatpickr-calendar {
+                max-height: 50vh !important;
+                overflow-y: auto !important;
+            }
         }
     </style>
 </head>
@@ -455,6 +505,10 @@
                 locale: {
                     firstDayOfWeek: 1
                 },
+                // Prevent auto-zoom and page movement on small screens
+                disableMobile: true,
+                position: "below right",
+                clickOpens: true,
                 // Add auto-apply on change
                 onChange: function(selectedDates, dateStr, instance) {
                     applyFilters();
