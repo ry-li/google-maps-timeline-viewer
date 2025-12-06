@@ -16,18 +16,18 @@ Download ***index.html*** to use locally or customize it as needed.
 2. Click **Upload Google Maps Timeline JSON** to upload the exported JSON file from Google Maps
 <br>or<br>
 Click **Load Sample Data** to load the sample data and give it a try. Reload the page to return to the upload interface.
-<img src="pics/pic-1.png" style="width:35%;">
+<img src="pics/pic-1.png" style="width:42%;">
 
 
 ## Functionalities: 
 * Mobile-friendly
 * Click ***lines*** or ***points*** to view details
-<img src="pics/pic-2a.png" style="width:66%;">
+<img src="pics/pic-2a.png" style="width:70%;">
 
 * Filter data by ***date range*** or ***single date***
 * Filter data by ***categories*** and ***detailed types***
 * Change ***basemaps***
-<img src="pics/pic-3.png" style="width:42%;">
+<img src="pics/pic-3.png" style="width:48%;">
 
 
 ## How to export Google Maps Timeline data:
