@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Timeline Viewer</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -249,7 +249,12 @@
         /* Prevent input focus zoom on mobile */
         .date-input {
             cursor: pointer !important;
-            touch-action: manipulation !important;
+            touch-action: none !important;
+        }
+        /* Prevent double-tap zoom on date control containers */
+        #rangeControls,
+        #singleControls {
+            touch-action: none !important;
         }
         .flatpickr-day {
             touch-action: manipulation !important;
@@ -614,8 +619,13 @@
                 // --- B. TIMELINE PATH ---
                 else if (item.category === 'timelinePath') {
                     const latlngs = item.points.map(p => [p.lat, p.lng]);
-                    const line = L.polyline(latlngs, { color: '#16a34a', weight: 4, opacity: 0.7 });
-                    line.bindPopup(`<b>Timeline Path</b><br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}<br>Total Points: ${item.points.length}`);
+                    // Create an invisible wider line for click detection
+                    const clickableLine = L.polyline(latlngs, { color: '#16a34a', weight: 10, opacity: 0, interactive: true });
+                    clickableLine.bindPopup(`<b>Timeline Path</b><br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}<br>Total Points: ${item.points.length}`);
+                    dataLayers.addLayer(clickableLine);
+                    
+                    // Create the visible line (non-interactive)
+                    const line = L.polyline(latlngs, { color: '#16a34a', weight: 4, opacity: 0.7, interactive: false });
                     dataLayers.addLayer(line);
                     
                     item.points.forEach((pt, index) => {
@@ -642,13 +652,18 @@
                 
                 // --- C. ACTIVITY ---
                 else if (item.category === 'activity') {
-                    const line = L.polyline(item.coords, { color: '#f97316', weight: 3, opacity: 0.8, dashArray: '5, 10' });
+                    // Create an invisible wider line for click detection
+                    const clickableLine = L.polyline(item.coords, { color: '#f97316', weight: 10, opacity: 0, interactive: true });
                     const distDisplay = item.distance ? `${Math.round(item.distance)} m` : "N/A";
-                    line.bindPopup(`<b>Activity: ${item.subType}</b><br>Distance: ${distDisplay}<br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}`);
+                    clickableLine.bindPopup(`<b>Activity: ${item.subType}</b><br>Distance: ${distDisplay}<br>Start: ${formatUTC(item.startTime)}<br>End: ${formatUTC(item.endTime)}`);
+                    dataLayers.addLayer(clickableLine);
+                    
+                    // Create the visible dotted line (non-interactive)
+                    const line = L.polyline(item.coords, { color: '#f97316', weight: 3, opacity: 0.8, dashArray: '5, 10', interactive: false });
                     dataLayers.addLayer(line);
                     
                     try {
-                        const decorator = L.polylineDecorator(line, {
+                        const decorator = L.polylineDecorator(clickableLine, {
                             patterns: [{ offset: '10%', repeat: '40%', symbol: L.Symbol.arrowHead({ pixelSize: 10, polygon: false, pathOptions: { stroke: true, color: '#f97316' } }) }]
                         });
                         dataLayers.addLayer(decorator);
