@@ -342,6 +342,7 @@
 
     <div id="status-bar">
         <span id="status">Ready to load file.</span>
+        <br>
         <span id="error-msg"></span>
     </div>
 
@@ -517,6 +518,50 @@
                 // Add auto-apply on change
                 onChange: function(selectedDates, dateStr, instance) {
                     applyFilters();
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    // Create year dropdown
+                    const yearElement = instance.currentYearElement;
+                    const currentYear = yearElement.value;
+                    
+                    // Get year range from valid dates
+                    const years = [...new Set(validDateStrings.map(d => d.split('-')[0]))].sort();
+                    const minYear = years[0];
+                    const maxYear = years[years.length - 1];
+                    
+                    // Create select element
+                    const select = document.createElement('select');
+                    select.className = 'flatpickr-monthDropdown-months';
+                    select.style.appearance = 'auto';
+                    for (let y = parseInt(minYear); y <= parseInt(maxYear); y++) {
+                        const option = document.createElement('option');
+                        option.value = y;
+                        option.text = y;
+                        if (y == currentYear) option.selected = true;
+                        select.appendChild(option);
+                    }
+                    
+                    // Replace year element with select and hide the arrows
+                    select.addEventListener('change', function() {
+                        instance.changeYear(parseInt(this.value));
+                    });
+                    
+                    const parent = yearElement.parentNode;
+                    parent.replaceChild(select, yearElement);
+                    instance.currentYearElement = select;
+                    
+                    // Hide the year navigation arrows
+                    const arrowUp = parent.querySelector('.arrowUp');
+                    const arrowDown = parent.querySelector('.arrowDown');
+                    if (arrowUp) arrowUp.style.display = 'none';
+                    if (arrowDown) arrowDown.style.display = 'none';
+                },
+                onMonthChange: function(selectedDates, dateStr, instance) {
+                    // Update year dropdown when month changes
+                    const select = instance.currentYearElement;
+                    if (select.tagName === 'SELECT') {
+                        select.value = instance.currentYear;
+                    }
                 }
             };
 
@@ -875,12 +920,12 @@
                     return response.json();
                 })
                 .then(data => {
-                    loadMapData(data, "Sample Data<br><br>Reload the page to upload your own data");
+                    loadMapData(data, "Sample Data<br><small>Reload the page to upload your own data</small>");
                 })
                 .catch(err => {
                     console.error("Fetch error:", err);
                     document.getElementById('status').innerText = "Failed.";
-                    document.getElementById('error-msg').innerText = "Error loading sample data. Check console.";
+                    document.getElementById('error-msg').innerHTML = "Error loading sample data. Check console.";
                     document.getElementById('error-msg').style.display = 'inline';
                 });
         });
