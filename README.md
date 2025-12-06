@@ -1,5 +1,5 @@
 # google-maps-timeline-viewer
-Open Source Google Maps Timeline Viewer
+Mobile-Friendly Open-Source Google Maps Timeline Viewer
 
 | File | About |
 | --- | --- |
@@ -9,39 +9,42 @@ Open Source Google Maps Timeline Viewer
 
 ## How to use:
 
-* Access the viewer at https://r-li.com/google-maps-timeline-viewer
+1. Access the viewer at https://r-li.com/google-maps-timeline-viewer
 <br>or<br>
 Download ***index.html*** to use locally or customize it as needed.
-* Click **Upload Data** to upload the exported JSON file from Google Maps (usually named ***location-history.json*** or similar)
+<br><br>
+2. Click **Upload Google Maps Timeline JSON** to upload the exported JSON file from Google Maps
+<br>or<br>
+Click **Load Sample Data** to load the sample data and give it a try. Reload the page to return to the upload interface.
+<img src="pics/pic-1.png" style="width:35%;">
 
 
-## About Google Maps Timeline and how to export the data:
+## Functionalities: 
+* Mobile-friendly
+* Click ***lines*** or ***points*** to view details
+<img src="pics/pic-2a.png" style="width:66%;">
+
+* Filter data by ***date range*** or ***single date***
+* Filter data by ***categories*** and ***detailed types***
+* Change ***basemaps***
+<img src="pics/pic-3.png" style="width:40%;">
+
+
+## How to export Google Maps Timeline data:
 
 **Official Doc:** https://support.google.com/maps/answer/6258979
 
 **Note:** Timeline is no longer available on computers
 
 **For iPhone & iPad:**
-* Open the Google Maps app
+* Open the *Google Maps* app
 * Tap profile picture or initial (top right) → *Settings* → *Location & privacy* → *Export Timeline data* (under *Timeline*) → *Save to Files*
 * Select your preferred storage location → *Save*
 
 **For Android:**
-* Open the device's Settings app
+* Open the device's *Settings* app
 * Tap *Location* → *Location services* → *Timeline* → *Export Timeline data* (under *Timeline*) → *Continue*
 * Select your preferred storage location → *Save*
-
-
-## Preview:
-
-Click ***lines*** or ***points*** to view details:
-
-![Preview-1](pics/pic-1.png "Preview-1")
-
-Filter data by ***date***, ***categories***, and ***detailed types*** & change the ***basemap***:
-
-![Preview-2](pics/pic-2.png "Preview-2")
-
 
 ## About the data:
 
@@ -59,4 +62,4 @@ All timestamps will be converted to Coordinated Universal Time (UTC)
 
 ## Acknowledgement:
 
-Coded with assistance from *Google Gemini 3 Pro*
+Coded with assistance from *Google Gemini 3 Pro* and *Microsoft Copilot*
