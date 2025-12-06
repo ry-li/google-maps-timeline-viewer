@@ -309,7 +309,7 @@
                             <input type="text" id="endDate" class="date-input" placeholder="End Date">
                         </div>
 
-                        <div id="singleControls" style="display:none; gap:5px; align-items:center;">
+                        <div id="singleControls" style="display:none; gap:5px; align-items:center; justify-content:center;">
                             <button class="nav-btn" id="prevDayBtn" title="Previous Available Day">&lt;</button>
                             <input type="text" id="singleDate" class="date-input" placeholder="Select Date" style="text-align:center;">
                             <button class="nav-btn" id="nextDayBtn" title="Next Available Day">&gt;</button>
@@ -554,6 +554,10 @@
                 rangeControls.style.display = 'flex';
                 singleControls.style.display = 'none';
             } else {
+                // Read the width of rangeControls and apply it to singleControls
+                const rangeWidth = rangeControls.offsetWidth;
+                singleControls.style.width = rangeWidth + 'px';
+                
                 rangeControls.style.display = 'none';
                 singleControls.style.display = 'flex';
             }
