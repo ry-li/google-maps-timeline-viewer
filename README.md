@@ -27,7 +27,7 @@ Click **Load Sample Data** to load the sample data and give it a try. Reload the
 * Filter data by ***date range*** or ***single date***
 * Filter data by ***categories*** and ***detailed types***
 * Change ***basemaps***
-<img src="pics/pic-3.png" style="width:40%;">
+<img src="pics/pic-3.png" style="width:42%;">
 
 
 ## How to export Google Maps Timeline data:
